@@ -1,0 +1,247 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Little Guy Clicker Deluxe</title>
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(#87CEEB, #ffffff);
+    text-align: center;
+    overflow: hidden;
+}
+
+
+h1 { margin-top: 10px; }
+
+
+#coins, #stats {
+    font-size: 20px;
+    margin: 5px;
+}
+
+
+#clickButton {
+    padding: 15px 30px;
+    font-size: 20px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+
+#shop {
+    position: absolute;
+    right: 20px;
+    top: 120px;
+    width: 240px;
+    background: rgba(255,255,255,0.95);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+
+.shop-item { margin: 10px 0; }
+
+
+.little-guy {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 90px;
+}
+
+
+#hat {
+    position: absolute;
+    bottom: 95px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 55px;
+}
+
+
+#achievements {
+    position: absolute;
+    left: 20px;
+    top: 120px;
+    width: 250px;
+    background: rgba(255,255,255,0.95);
+    padding: 10px;
+    border-radius: 10px;
+    text-align: left;
+}
+</style>
+</head>
+<body>
+
+
+<h1>👦 Little Guy Clicker Deluxe</h1>
+
+
+<div id="coins">Coins: 0</div>
+<div id="stats">Click Power: 1 | CPS: 0</div>
+<button id="clickButton">Click!</button>
+
+
+<div id="shop">
+    <h3>🧢 Hat Shop</h3>
+    <div class="shop-item">
+        <button onclick="buyHat('cap')">Cap (50)</button>
+    </div>
+    <div class="shop-item">
+        <button onclick="buyHat('crown')">Crown (150)</button>
+    </div>
+    <div class="shop-item">
+        <button onclick="buyHat('wizard')">Wizard Hat (300)</button>
+    </div>
+</div>
+
+
+<div id="achievements">
+    <h3>🏆 Achievements</h3>
+    <ul id="achievementList"></ul>
+</div>
+
+
+<div id="hat"></div>
+<div class="little-guy">🙂</div>
+
+
+<script>
+let coins = 0;
+let clickPower = 1;
+let cps = 0;
+let totalClicks = 0;
+
+
+let achievementsUnlocked = [];
+
+
+const coinsDisplay = document.getElementById("coins");
+const statsDisplay = document.getElementById("stats");
+const hatDisplay = document.getElementById("hat");
+const achievementList = document.getElementById("achievementList");
+
+
+const clickSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-game-click-1114.mp3");
+const buySound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3");
+const achievementSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3");
+
+
+document.getElementById("clickButton").onclick = function() {
+    coins += clickPower;
+    totalClicks++;
+    clickSound.currentTime = 0;
+    clickSound.play();
+    checkAchievements();
+    updateDisplay();
+};
+
+
+function buyHat(type) {
+    if (type === "cap" && coins >= 50) {
+        coins -= 50;
+        clickPower += 1;
+        hatDisplay.innerText = "🧢";
+        buySound.play();
+    }
+
+
+    if (type === "crown" && coins >= 150) {
+        coins -= 150;
+        clickPower += 3;
+        cps += 1;
+        hatDisplay.innerText = "👑";
+        buySound.play();
+    }
+
+
+    if (type === "wizard" && coins >= 300) {
+        coins -= 300;
+        clickPower += 5;
+        cps += 3;
+        hatDisplay.innerText = "🎩";
+        buySound.play();
+    }
+
+
+    updateDisplay();
+}
+
+
+function updateDisplay() {
+    coinsDisplay.innerText = "Coins: " + Math.floor(coins);
+    statsDisplay.innerText = "Click Power: " + clickPower + " | CPS: " + cps;
+    saveGame();
+}
+
+
+function checkAchievements() {
+    unlockAchievement("First Click", totalClicks >= 1);
+    unlockAchievement("Click Master", totalClicks >= 100);
+    unlockAchievement("Rich!", coins >= 500);
+    unlockAchievement("Power Player", clickPower >= 10);
+}
+
+
+function unlockAchievement(name, condition) {
+    if (condition && !achievementsUnlocked.includes(name)) {
+        achievementsUnlocked.push(name);
+        let li = document.createElement("li");
+        li.innerText = "✅ " + name;
+        achievementList.appendChild(li);
+        achievementSound.play();
+    }
+}
+
+
+// Auto income
+setInterval(function() {
+    coins += cps;
+    updateDisplay();
+    checkAchievements();
+}, 1000);
+
+
+// SAVE SYSTEM
+function saveGame() {
+    localStorage.setItem("littleGuySave", JSON.stringify({
+        coins,
+        clickPower,
+        cps,
+        totalClicks,
+        achievementsUnlocked,
+        hat: hatDisplay.innerText
+    }));
+}
+
+
+function loadGame() {
+    let save = JSON.parse(localStorage.getItem("littleGuySave"));
+    if (save) {
+        coins = save.coins;
+        clickPower = save.clickPower;
+        cps = save.cps;
+        totalClicks = save.totalClicks;
+        achievementsUnlocked = save.achievementsUnlocked || [];
+        hatDisplay.innerText = save.hat || "";
+
+
+        achievementsUnlocked.forEach(a => {
+            let li = document.createElement("li");
+            li.innerText = "✅ " + a;
+            achievementList.appendChild(li);
+        });
+    }
+}
+
+
+loadGame();
+updateDisplay();
+</script>
+
+
+</body>
+</html>
